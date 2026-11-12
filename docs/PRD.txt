@@ -1,0 +1,186 @@
+Lightning Tontine: Product Requirements Document (PRD)
+Document 1 of 6 · Version 0.1, draft for approval · 12 November 2026 · Built for the Dakar Bitcoin Hack by BTrust (submission deadline: 20 November 2026)
+How to read this document
+• “Lightning Tontine” is a working title. No name has been chosen yet.
+• Items marked (confirmed) come from decisions made during discovery. Items marked (proposed) are my recommendations and need your approval. Section 15 collects every proposed value in one place.
+• Requirement IDs (FR = functional, NFR = non-functional, BR = business rule) exist so that Claude Code and you can refer to exact requirements.
+• This document names no libraries, frameworks or services. Technology choices belong in Document 2 (TRD) and need your approval.
+1. Product overview and vision
+Lightning Tontine is a mobile-first web app that lets a group of Nigerian students run a rotating savings circle (known locally as ajo or esusu) without one person holding the group’s money.
+Vision: any group of students can save together for school fees, rent or a laptop without having to trust one person with the pot.
+Pitch: “Save for school fees and rent with your classmates, without trusting one person to hold the money.”
+How it works in brief:
+1. A creator sets up a circle: a contribution amount in naira, weekly or monthly rounds, and a number of members.
+2. Members join through an invite link and add their own Lightning address.
+3. Each round has one recipient. Every other member pays that recipient directly, from their own Lightning wallet, in sats.
+4. The app tracks who has paid, shows the whole circle who has not, and builds a reliability record for each member.
+5. After every member has received the pot once, the circle is complete.
+The app never receives, holds or pools money (confirmed). It coordinates, verifies and records.
+2. Problem statement
+Rotating savings groups are used by millions of people in Nigeria. Their weakness is the same everywhere:
+• Trust in one person. The organiser collects everyone’s cash and pays it out. If they delay, mismanage the money or disappear, the group has little recourse.
+• No shared record. Payments are often tracked in a notebook or a chat group. Disputes about who paid and when are common.
+• Late payers are invisible. Members find out about missed payments only when their own payout is delayed.
+For students, the amounts are small in absolute terms but important: tuition, hostel rent, a laptop. A lost contribution can mean a missed deadline.
+What this product does and does not solve. It removes the organiser as a holder of funds, gives the circle one shared record, and makes missed payments visible. It cannot prevent a member from stopping payments after they have collected. Honest communication of this limit is part of the product (FR-19).
+3. Target audience and user personas
+Primary audience (confirmed): students in Nigeria who already use custodial Lightning wallets such as Wallet of Satoshi or Blink. The app is in English only.
+Secondary audience: hackathon judges, who need to test the product quickly and see its potential.
+The personas below are illustrative, not the result of research.
+Amaka, the Creator. A 300-level university student who already organises hostel contributions. She wants a fair, transparent way to save ₦150,000 for school fees with five friends over six months. She is comfortable with Lightning wallets but dislikes being the person everyone blames when a payment is late.
+Tunde, the Member. A student with an irregular allowance who joins circles when invited. He wants to know exactly how much to pay, to whom and by when, and to see proof that others are paying too. He uses his phone for everything and is careful about mobile data.
+A hackathon judge. Has a few minutes. Wants to create or join a circle, make a real payment, and see the result without help.
+4. Product objectives
+Product objectives
+• O1: let a student create a circle and invite members in under 3 minutes (proposed target).
+• O2: make every payment in a circle visible and verifiable to every member.
+• O3: ensure the app never holds funds.
+• O4: make missed payments visible to the circle and build a reliability record.
+Hackathon objectives, mapped to the judging criteria:
+• Usefulness and social impact: a real student need, tested with real students.
+• Security by design: no custody, no wallet secrets, locked rules after start, validated inputs.
+• UX/UI quality: dark, minimal, Bitcoin-native design that is clear on a phone.
+• MVP: one complete circle that works end to end with real Lightning payments.
+• Clear pitch: the one-sentence pitch above, a presentation (text or video), a public GitHub repository, and a working MVP plus demo video.
+5. Core features (MVP)
+1. Email sign-in with a link (no passwords).
+2. Profile with display name and receiving Lightning address.
+3. Circle creation with weekly or monthly contributions.
+4. Invite link and member joining.
+5. Payout order by random draw or creator-set order, locked at start.
+6. Round schedule with a clear recipient and due date for every round.
+7. Direct member-to-recipient Lightning payments with verified status.
+8. Circle dashboard showing who has paid and who has not.
+9. Reliability record for every member.
+10. Email reminders and alerts.
+11. AI setup assistant that suggests a circle plan from a savings goal.
+12. Plain-language risk disclosure.
+6. Functional requirements
+6.1 Accounts and profile
+• FR-1 Sign-in (confirmed method). A user enters an email address and receives a single-use sign-in link. Opening the link signs them in. There are no passwords. Links expire after 15 minutes (proposed).
+• FR-2 Profile. Each user has a display name (2 to 30 characters) and a receiving Lightning address in the form name@domain. The app validates the format. A user cannot create or join a circle without both.
+• FR-3 Address protection. A user cannot change their Lightning address while they belong to an active circle (proposed). This prevents payments being redirected after a circle starts.
+• FR-4 Sign-out. A user can sign out from any signed-in screen.
+6.2 Creating and joining circles
+• FR-5 Create a circle. The creator provides: a circle name (3 to 40 characters); an optional purpose (for example “School fees”); the contribution per round in naira (₦500 to ₦50,000, proposed); the frequency, weekly or monthly (confirmed); the number of members (3 to 10, proposed); and the payout order method, random draw or creator-set order (confirmed). The creator becomes the first member.
+• FR-6 Invite link. Each circle has a unique invite link. Opening it requires sign-in, then shows the circle’s name, contribution, frequency, number of members and the rules. The user joins by confirming. Joining closes automatically when the circle is full.
+• FR-7 Member list. Every member can see the list of members with display names and reliability summaries (see FR-14).
+• FR-8 Before the circle starts. The creator may cancel the circle or remove a member. A member may leave. After the circle starts, none of these are possible.
+6.3 Starting a circle and the schedule
+• FR-9 Start. Only the creator can start a circle, and only when it is full. The creator chooses the first due date, which must be at least 24 hours away (proposed).
+• FR-10 Order. At start, the order is fixed: either the app performs a random draw and shows the result to everyone, or the creator’s order is confirmed and shown to everyone. The order cannot change afterwards (confirmed).
+• FR-11 Schedule. The app generates and shows the full schedule: for every round, the due date and the recipient. Weekly rounds fall every 7 days. Monthly rounds fall on the same day each month, or the last day of the month where that day does not exist.
+• FR-12 Locked rules. After start, the members, order, contribution, frequency and schedule cannot be edited by anyone.
+6.3 Payments
+• FR-13 Pay screen. For each round where the user owes a payment, the app shows the recipient’s display name, the amount in naira, the equivalent in sats, and the time of the exchange rate used. The user pays from their own wallet. The app never receives the funds.
+• FR-13a Rate handling. The sats amount is fixed for a payment attempt and expires after a short time (10 minutes, proposed). If it expires, the user can refresh it and see the new amount before paying.
+• FR-13b Evidence rule. A payment is recorded as Paid only on evidence: automatic verification where the recipient’s wallet allows it, or otherwise the recipient’s confirmation. The method is decided in the TRD. The app never marks a payment as Paid on the payer’s word alone.
+• FR-13c Payment states. Every payment shows exactly one state: Due, Awaiting confirmation, Paid, Late or Missed.
+• FR-13d Round view. For each round, every member can see: the recipient, who has paid, who has not, the total received so far, and the due date.
+• FR-13e Late payments. Payments are accepted until the circle completes, even after the due date. The reliability record still reflects the original timing (BR-7).
+• FR-13f Failure handling. If a payment fails, expires or cannot be verified, the app explains what happened in plain language and offers a way to retry.
+6.4 Reliability record
+• FR-14 Reliability record. The app keeps, for each user, the number of payments that were on time, late and missed, the number of circles completed and an on-time percentage. Members of a circle can see these figures for the other members (visibility scope proposed in Section 15).
+• FR-14a Missed payments are visible (confirmed). When a payment is missed, the circle dashboard shows who owes what to whom, until it is paid. No money is held back and no one is removed.
+6.5 Notifications
+• FR-15 Email notifications (proposed). The app sends emails for: circle started and schedule published; payment reminder 24 hours before the due date; payment received (to the recipient); payment missed (to all circle members); circle completed. There is no in-app notification centre in the MVP.
+6.6 AI setup assistant
+• FR-16 Setup assistant (confirmed feature). On the create-circle screen, the user can describe a savings goal in plain English, for example “₦150,000 for school fees in 6 months.” The assistant suggests a circle plan: number of members, contribution per round, frequency, number of rounds and total duration.
+• FR-16a Arithmetic. Each member receives the pot once, so pot = members × contribution, and rounds = members. In the example above, a monthly circle of 6 members contributing ₦25,000 reaches ₦150,000 in 6 months.
+• FR-16b Validation. The suggestion is checked against the limits in FR-5 before it is shown. The user can edit every value, and creation is always the user’s own action.
+• FR-16c Boundaries. The assistant receives only the text the user typed. It cannot access accounts, wallets, payments or other users’ data. It cannot create circles or move money. Output is labelled “AI suggestion, please check before creating.”
+• FR-16d Limits. Each user can make at most 10 assistant requests per day (proposed). If the assistant fails, the user can continue manually.
+6.7 Completion and safeguards
+• FR-17 Completion. A circle completes after the last round’s grace period ends. A summary shows every round, payment states and final reliability results. All records remain viewable.
+• FR-18 Screen states. Every screen defines loading, empty and error states with plain-language messages.
+• FR-19 Risk disclosure. Before a user first creates or joins a circle, the app states in plain language that it does not hold or guarantee funds, that members are responsible for their own payments, and that a member who stops paying can cause losses to others. The user must acknowledge this.
+7. Non-functional requirements
+Security and integrity
+• NFR-1 No custody. The app never holds, pools or routes sats, and never asks for or stores wallet seed phrases, private keys or wallet logins.
+• NFR-2 Access control. A user can see only circles they belong to, plus the summary of an invite link they have opened.
+• NFR-3 Input validation. All user input is validated on the server, not only in the interface.
+• NFR-4 Transport. All traffic uses HTTPS.
+• NFR-5 Rate limiting. Sign-in requests, payment initiation and the AI assistant are rate-limited.
+• NFR-6 Audit trail. Every change to a payment state is logged with time and actor.
+• NFR-7 No duplicate counting. Recording the same payment twice must not change totals or the reliability record.
+• NFR-8 Secrets. No secret keys appear in the public GitHub repository or in code that runs in the browser. The repository contains an example configuration file only.
+Performance and usability
+• NFR-9 Speed. The first screen is usable within 3 seconds on a mid-range Android phone on a 4G connection (proposed target).
+• NFR-10 Data use. Pages are light, because mobile data costs students real money.
+• NFR-11 Payment feedback. Where automatic verification is possible, a payment’s state updates within 10 seconds of the payment (proposed target).
+• NFR-12 Compatibility. Current and previous major versions of Chrome on Android and Safari on iOS, from 360 px screen width.
+• NFR-13 Accessibility. Text and controls meet WCAG 2.1 AA contrast in the dark theme. Touch targets are at least 44 px. State is never shown by colour alone.
+• NFR-14 Localisation. English only. Amounts in naira (₦). Times in West Africa Time (WAT).
+Data protection and reliability
+• NFR-15 Data minimisation. The app collects only email, display name, Lightning address and circle activity. It does not collect phone numbers or identity documents.
+• NFR-16 Privacy notice. A short privacy notice is shown at sign-up and gives a contact route for deletion requests. The Nigeria Data Protection Act 2023 may apply; you should verify this, as I am not a lawyer.
+• NFR-17 Stability. The app must be stable throughout the judging period, which follows the 20 November deadline.
+8. User needs and expectations
+• Know exactly how much to pay, to whom and by when.
+• See proof that other members are paying.
+• Be able to trust that nobody, including the creator and the app, can take the group’s money.
+• Understand naira amounts without needing to think in sats.
+• Use the app quickly on a phone with limited data.
+• Get a reminder before a payment is due.
+• Be told honestly what the app cannot guarantee.
+9. Business rules
+• BR-1 Pot. Pot per round = number of members × contribution. Each member receives the pot exactly once, so the number of rounds equals the number of members.
+• BR-2 Recipient’s own share. The recipient’s own contribution is treated as paid (proposed). The recipient receives payments from the other members only.
+• BR-3 Naira-denominated. Contributions are fixed in naira. The sats amount is calculated at payment time (FR-13).
+• BR-4 Direct payment. A member can only pay the recipient of the current round. No payment goes to the creator, the app or any pooled address (confirmed).
+• BR-5 Locked after start. Members, order, contribution, frequency and schedule are locked once the circle starts (confirmed for order).
+• BR-6 Due time. A payment is due by 23:59 WAT on the due date, with a 48-hour grace period (proposed).
+• BR-7 Classification. A payment is On time if verified by the due time, Late if verified after the due time but before the grace period ends, and Missed if not verified by the end of the grace period. The classification is final. A Missed payment can still be paid later, which clears the amount owed but does not change the record.
+• BR-8 Evidence. A payment is Paid only with evidence (FR-13b).
+• BR-9 No penalties. The app imposes no fines, removals or withheld payouts in the MVP (confirmed: missed payments are shown and recorded).
+10. User roles and permissions
+• Visitor (signed out): can view the landing page and sign in. Cannot see circle details.
+• Member: can edit their profile, join circles by invite, view circles they belong to, pay and confirm payments, and see reliability records of co-members.
+• Circle creator: a member with extra rights in their own circle only: share the invite link, cancel the circle or remove a member before start, choose the first due date, set the order (if creator-set) and start the circle. After start the creator has the same rights as any member.
+• App operator (you): no administration screen in the MVP. Access is through the project’s backend tools. The operator cannot move user funds, because none are held.
+• AI assistant: not a user role. It has no access to data beyond what a user types into it.
+11. Success metrics and KPIs
+Hackathon success (proposed targets, to be met by 20 November 2026):
+• At least one live circle with 4 or more real students, completing at least 2 rounds with real sats payments.
+• 100% of test payments end in the correct state.
+• Zero sats ever held by the app.
+• A first-time user can create a circle with the AI assistant in under 3 minutes.
+• A judge can follow create, join, pay and confirm without help.
+• All five submission items delivered: presentation, public repository, working MVP, demo video, clear pitch.
+After the hackathon (indicative): circles created, circles completed, on-time payment rate, and share of members who join a second circle.
+12. Product constraints
+• Time: 8 days from 12 November to the 20 November deadline.
+• Builder: one person with no coding experience, using Claude Code on their own computer. Building 5 or more hours a day.
+• Wallets: students use custodial wallets. This limits what an app can ask a wallet to do and shapes how payments are verified.
+• Platform: mobile-first web app, no native apps.
+• No custody: non-negotiable.
+• Unknowns: the project budget, the builder’s computer and internet reliability, and the app’s final name have not been given. I will ask about them before the TRD and Development Plan are finalised.
+13. Scope: included and excluded
+Included (MVP): everything in Section 5.
+Excluded from version 1: Nostr features; native mobile apps; USSD or feature-phone access; languages other than English; fees or any monetisation; any in-app wallet; dispute resolution; removing or replacing members after start; fines or withheld payouts; group chat; identity verification; in-app notification centre; loans or credit; an admin dashboard; automatic debits from wallets.
+Nostr and further AI features are “Could Have” items for Document 3.
+14. Assumptions, risks and known limitations
+• Payment verification is the biggest technical risk. Members pay each other directly, and custodial wallets may not all allow automatic verification. The fallback is recipient confirmation. The TRD will research and decide this.
+• Default risk remains. A member who collects early can stop paying. The app makes this visible but cannot stop it.
+• The reliability record can be avoided by signing up with a new email address. This is a known limitation of email sign-in.
+• Locked Lightning address. If a member loses access to their wallet during a circle, payments to them cannot be redirected in the MVP.
+• Naira and sats move against each other. The recipient receives sats worth the agreed naira amount at payment time, but their value can change afterwards.
+• No dispute process. If a payer and recipient disagree, the app shows the state but cannot decide.
+• Regulation. Nigerian rules on savings schemes and digital assets may apply. Because the app never holds funds the exposure is likely lower, but this needs a check by someone qualified.
+• Schedule risk. Eight days is tight. The MVP is deliberately limited to one complete circle flow.
+15. Decisions needed from you
+Each item below is my proposal. Please approve or change each one.
+1. Circle size: 3 to 10 members.
+2. Contribution per round: ₦500 to ₦50,000.
+3. First due date at least 24 hours after the creator starts the circle.
+4. Payment due at 23:59 WAT, followed by a 48-hour grace period.
+5. Late payments accepted until the circle ends, with the record classification kept final (BR-7).
+6. The recipient’s own share treated as paid (BR-2).
+7. Reliability record visible to co-members, including figures from the person’s other circles.
+8. Email-only notifications, with the five emails in FR-15.
+9. Lightning address locked while a user is in an active circle.
+10. AI assistant limit of 10 requests per user per day.
+11. Sign-in links valid for 15 minutes.
+12. A required risk acknowledgement before first create or join.
+13. The hackathon success targets in Section 11.
+14. The app’s name, if you have one.
